@@ -3,6 +3,6 @@
 from .server import server
 
 
-def main():  # pragma: no cover
+def main() -> None:  # pragma: no cover
     """Start the MCP server."""
     server.run()
