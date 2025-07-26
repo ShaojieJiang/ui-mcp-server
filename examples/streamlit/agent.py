@@ -51,7 +51,7 @@ if __name__ == "__main__":
         """Run the demo agent."""
         server_params = StdioServerParameters(
             command="uvx",
-            args=["ui-mcp-server"],
+            args=["ui-mcp-server@latest"],
         )
         # TODO: find a more elegant way to maintain the session
         async with stdio_client(server_params) as (read, write):
