@@ -40,7 +40,30 @@ This project initiates at the [Power of Europe Hackathon 2025](https://rewirenow
 
 ### Kilo
 
-To be updated.
+A working configuration looks like below:
+
+```json
+{
+  "mcpServers": {
+    "ui-mcp-server":{
+      "command": "full/path/to/ui-mcp-server",
+      "args": []
+    }
+  }
+}
+```
+
+We might have missed something as the expected version below didn't work:
+```json
+{
+  "mcpServers": {
+    "ui-mcp-server":{
+      "command": "full/path/to/uvx",
+      "args": ["ui-mcp-server"]
+    }
+  }
+}
+```
 
 ## Core concepts
 
