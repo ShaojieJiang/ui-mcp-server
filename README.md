@@ -4,90 +4,35 @@
 [![Coverage](https://coverage-badge.samuelcolvin.workers.dev/AI-Colleagues/uv-template.svg)](https://coverage-badge.samuelcolvin.workers.dev/redirect/AI-Colleagues/uv-template)
 <!-- [![PyPI](https://img.shields.io/pypi/v/pydantic-ai.svg)](https://pypi.python.org/pypi/pydantic-ai) -->
 
-A modern Python project template with UV package management, pre-commit hooks for code quality, and documentation support via MkDocs.
+This project initiates at the [Power of Europe Hackathon 2025](https://rewirenow.com/en/resources/blog/power-of-europe-hackathon-building-with-european-ai/).
+
+## Overview
+
+`ui-mcp-server` is an MCP server that generates specifications for a range of UI components, containing only essential data to remain framework-agnostic. Unlike existing solutions, `ui-mcp-server` is data-focused, acquiring and filling data during conversation sessions while leaving rendering entirely to frontend developers (for now).
 
 ## Features
 
-- 📦 UV for package and project management
-- 🔍 Pre-commit hooks for code quality
-- 📚 Documentation setup with MkDocs Material theme
-- 🛠️ Makefile for common development tasks
-- ✨ Code quality tools:
-  - Black-compatible formatting (via Ruff)
-  - Import sorting (via Ruff)
-  - Type checking with mypy
-  - Comprehensive linting with Ruff
-- 📊 Testing setup with pytest and coverage reporting
+- Framework-agnostic UI component specifications
+- Data-focused approach with conversation session support
+- Full developer freedom for rendering and customization
+- Compatible with MCP clients like Cursor, Kilo and Claude Desktop
 
-## Installation
+## Core concepts
 
-```bash
-# Install dependencies
-uv sync
-```
+- UI-as-a-tool: `ui-mcp-server` provides tools that can be used to generate UI components. To this end, frequently used UI components are defined as tools, and the data required for each tool is acquired during the conversation session. The data extraction part is taken care of by AI agents using this MCP server. See our Streamlit demo for an example (to be updated).
+- Component standardisation: To be agnostic of frontend frameworks, `ui-mcp-server` defines a standardised component library, which is basically a set of JSON schemas for UI components, with some values are predefined, and others are left to be filled by AI.
 
-## Development
+## Related Projects
 
-This template includes several tools to ensure code quality and maintainability:
+- [Magic MCP](https://github.com/21st-dev/magic-mcp): Generates React components, focusing on development productivity
+- [MCP UI](https://github.com/idosal/mcp-ui): Similar concept to this project but with tighter coupling to specific UI implementations. Can't be used as a standalone MCP server.
+- [shadcn-ui-mcp-server](https://github.com/Jpisnice/shadcn-ui-mcp-server): Similart to MCP UI, a battery-included solution providing shadcn components as source code.
 
-- **UV**: Modern package and project management for Python 3.12+
-- **Pre-commit hooks**: Automated code quality checks
-- **MkDocs**: Documentation generation with Material theme and Python API docs support
-- **Ruff**: All-in-one Python linter and formatter with:
-  - Code style enforcement (PEP 8)
-  - Import sorting
-  - Complexity checking (McCabe)
-  - Docstring validation (Google style)
-  - And many more checks
-- **mypy**: Static type checking with strict settings
-- **Github Actions**:
-  - Release workflow on push tags
+## Key Differentiators
 
-### Code Quality Tools
+**Separation of Concerns**: `ui-mcp-server` handles UI types and conversation data exclusively, providing maximum flexibility for developers to customize and render components according to their specific needs and frameworks.
 
-The template comes with pre-configured linting and formatting tools that run automatically on commit:
+## Future work
 
-- **Ruff Format**: Formats your code consistently (Black-compatible)
-- **Ruff Lint**: Comprehensive linting with multiple rule sets enabled:
-  - Code style (pycodestyle)
-  - Bugs and complexity (pyflakes, flake8-bugbear)
-  - Naming conventions (PEP 8)
-  - Import organization
-  - And more
-- **mypy**: Strict type checking with `disallow_untyped_defs=true`
-
-To manually run the tools:
-```bash
-# Check code quality (ruff, mypy, and format check)
-make lint
-
-# Format code
-make format
-
-# Run tests with coverage report
-make test
-
-# Serve documentation locally
-make doc
-```
-
-You can also run individual tools directly with UV:
-```bash
-# Format and lint code
-ruff check .
-ruff format .
-
-# Type checking
-mypy .
-
-# Run tests with coverage
-pytest --cov --cov-report term-missing tests/
-```
-
-## Usage
-
-1. Clone this template
-2. Update the project details in `pyproject.toml`
-3. Start developing with the included tools
-
-For more detailed information, check the documentation.
+- Define standardized component libraries for mainstream frameworks (React, Vue, Svelte, etc.)
+- Create templates to streamline frontend development workflow
