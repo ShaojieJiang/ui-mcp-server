@@ -1,8 +1,8 @@
 # UI MCP Server
 
-[![CI](https://github.com/AI-Colleagues/uv-template/actions/workflows/ci.yml/badge.svg?event=push)](https://github.com/AI-Colleagues/uv-template/actions/workflows/ci.yml?query=branch%3Amain)
-[![Coverage](https://coverage-badge.samuelcolvin.workers.dev/AI-Colleagues/uv-template.svg)](https://coverage-badge.samuelcolvin.workers.dev/redirect/AI-Colleagues/uv-template)
-<!-- [![PyPI](https://img.shields.io/pypi/v/pydantic-ai.svg)](https://pypi.python.org/pypi/pydantic-ai) -->
+[![CI](https://github.com/ShaojieJiang/ui-mcp-server/actions/workflows/ci.yml/badge.svg?event=push)](https://github.com/ShaojieJiang/ui-mcp-server/actions/workflows/ci.yml?query=branch%3Amain)
+[![Coverage](https://coverage-badge.samuelcolvin.workers.dev/ShaojieJiang/ui-mcp-server.svg)](https://coverage-badge.samuelcolvin.workers.dev/redirect/ShaojieJiang/ui-mcp-server)
+[![PyPI](https://img.shields.io/pypi/v/ui-mcp-server.svg)](https://pypi.python.org/pypi/ui-mcp-server)
 
 This project initiates at the [Power of Europe Hackathon 2025](https://rewirenow.com/en/resources/blog/power-of-europe-hackathon-building-with-european-ai/).
 
@@ -25,11 +25,9 @@ This project initiates at the [Power of Europe Hackathon 2025](https://rewirenow
    ```json
    {
      "mcpServers": {
-       "ui-mcp-server": {
-         "command": "uvx",
-         "args": [
-            "ui-mcp-server"
-         ]
+       "UI MCP Server": {
+         "command": "full/path/to/uvx",
+         "args": ["ui-mcp-server"]
        },
        // Your existing MCP servers...
      }
