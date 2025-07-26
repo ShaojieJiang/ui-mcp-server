@@ -40,7 +40,18 @@ This project initiates at the [Power of Europe Hackathon 2025](https://rewirenow
 
 ### Kilo
 
-To be updated.
+A working json instance looks like below
+
+'''
+{
+  "mcpServers": {
+    "ui-mcp-server":{
+      "command": "/Users/[username]/.local/bin/ui-mcp-server",
+      "args": []
+    }
+  }
+}
+```
 
 ## Core concepts
 
