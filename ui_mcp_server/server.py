@@ -10,7 +10,7 @@ server = FastMCP("ui-mcp-server")
 @server.prompt()
 def ui_component_prompt() -> str:  # pragma: no cover
     """Predefined prompt for UI component generation."""
-    return "Use the tools from the ui-mcp-server to generate a UI components, which will be used in a frontend application."  # noqa: E501
+    return "Use the tools from the ui-mcp-server to generate a UI components, which will be used in a frontend application. When tools are called, the next response should be something very short and concise."  # noqa: E501
 
 
 @server.tool()

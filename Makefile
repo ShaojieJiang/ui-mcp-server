@@ -1,6 +1,6 @@
 lint:
 	ruff check .
-	mypy ui_mcp_server
+	mypy .
 	ruff format . --check
 
 format:
