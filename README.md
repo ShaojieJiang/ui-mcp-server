@@ -17,6 +17,31 @@ This project initiates at the [Power of Europe Hackathon 2025](https://rewirenow
 - Full developer freedom for rendering and customization
 - Compatible with MCP clients like Cursor, Kilo and Claude Desktop
 
+## Installation
+
+### Claude Desktop
+
+1. Add the server to your Claude Desktop configuration file (`claude_desktop_config.json`):
+   ```json
+   {
+     "mcpServers": {
+       "ui-mcp-server": {
+         "command": "uvx",
+         "args": [
+            "ui-mcp-server"
+         ]
+       },
+       // Your existing MCP servers...
+     }
+   }
+   ```
+
+2. Restart Claude Desktop to load the MCP server.
+
+### Kilo
+
+To be updated.
+
 ## Core concepts
 
 - UI-as-a-tool: `ui-mcp-server` provides tools that can be used to generate UI components. To this end, frequently used UI components are defined as tools, and the data required for each tool is acquired during the conversation session. The data extraction part is taken care of by AI agents using this MCP server. See our Streamlit demo for an example (to be updated).
