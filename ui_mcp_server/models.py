@@ -36,13 +36,13 @@ class NumberInput(InputComponent):
 
     type: Literal["number_input", "slider"]
     """UI component type."""
-    min_value: int | float | None = None
+    min_value: float | None = None
     """Minimum value for the component."""
-    max_value: int | float | None = None
+    max_value: float | None = None
     """Maximum value for the component."""
-    step: int | float | None = None
+    step: float | None = None
     """Step for the component."""
-    value: int | float | None = None
+    value: float | None = None
     """Initial value of the component."""
 
 
@@ -57,10 +57,14 @@ class Choice(InputComponent):
     """Initial value(s) from the options."""
 
 
-class TableOutput(OutputComponent):
-    """Parameters for table output components. Be sure to generate a list of dictionaries as the `data` field."""  # noqa: E501
+class LineChart(OutputComponent):
+    """Parameters for line chart components."""
 
-    type: Literal["table"]
+    type: Literal["line_chart"]
     """UI component type."""
-    data: list[dict]
-    """List of JSON objects for the component."""
+    data: list[int | float]
+    """List of values for the component."""
+    x_label: str
+    """Label of the x-axis."""
+    y_label: str
+    """Label of the y-axis."""

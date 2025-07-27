@@ -71,21 +71,28 @@ class ChatPage:
                 user_input = None
         return user_input
 
-    def display_ui_component(self, message: ToolMessage) -> tuple[str, Any]:
+    def display_ui_component(self, message: ToolMessage) -> None:
         """Display the UI component."""
         data = json.loads(message.content)
         match data["type"]:
             case "number_input" | "slider" | "radio" | "multiselect":
-                user_input = self.display_input_form(data)
-                label = data["label"]
-            case "table":
-                user_input = st.dataframe(data["data"], key=data["key"])
-                label = None
+                with st.form(key=message.tool_call_id):
+                    user_input = self.display_input_form(data)
+                    submit_button = st.form_submit_button("Submit")
+                    if submit_button:
+                        self.update_ui_input(message, user_input)
+                        self.get_agent_response(
+                            f"My input to {data['label']} is {user_input}"
+                        )
+            case "line_chart":
+                st.line_chart(
+                    data["data"],
+                    x_label=data["x_label"],
+                    y_label=data["y_label"],
+                )
             case _:
                 st.write("Unable to display the UI component.")
                 st.write(data)
-                user_input = None
-        return label, user_input
 
     def update_ui_input(self, message: ToolMessage, user_input: Any) -> None:
         """Update the user input."""
@@ -104,14 +111,7 @@ class ChatPage:
                 continue
             with st.chat_message(message_type):
                 if message.type == "tool":
-                    with st.form(key=message.tool_call_id):
-                        label, user_input = self.display_ui_component(message)
-                        submit_button = st.form_submit_button("Submit")
-                        if submit_button:
-                            self.update_ui_input(message, user_input)
-                            self.get_agent_response(
-                                f"My input to {label} is {user_input}"
-                            )
+                    self.display_ui_component(message)
                 else:
                     st.write(message.content)
 

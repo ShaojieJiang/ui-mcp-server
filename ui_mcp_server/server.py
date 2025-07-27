@@ -1,7 +1,7 @@
 """Tools for UI components."""
 
 from mcp.server.fastmcp import FastMCP
-from ui_mcp_server.models import Choice, NumberInput, TableOutput
+from ui_mcp_server.models import Choice, LineChart, NumberInput
 
 
 server = FastMCP("ui-mcp-server")
@@ -34,11 +34,11 @@ def choice(params: Choice) -> Choice:
 
 
 @server.tool()
-def table_output(params: TableOutput) -> TableOutput:
-    """Generate a table output component.
+def line_chart(params: LineChart) -> LineChart:
+    """Generate a line chart component.
 
     Args:
-        params: Parameters for the table output component.
+        params: Parameters for the line chart component.
     """
     return params
 
