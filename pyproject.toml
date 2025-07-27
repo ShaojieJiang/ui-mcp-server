@@ -33,7 +33,7 @@ name = "ui-mcp-server"
 readme = "README.md"
 requires-python = ">=3.12"
 url = "https://github.com/AI-Colleagues/ui-mcp-server"
-version = "0.0.3"
+version = "0.1.0"
 
 [project.scripts]
 ui-mcp-server = "ui_mcp_server:main"
