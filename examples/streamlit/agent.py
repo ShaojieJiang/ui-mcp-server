@@ -1,7 +1,8 @@
 """Agent for the Streamlit demo."""
 
+import json
 from pprint import pprint
-from langchain_core.messages import BaseMessage
+from langchain_core.messages import BaseMessage, ToolMessage
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph.state import CompiledStateGraph
@@ -54,6 +55,21 @@ class Agent:
             return past_state[0].values["messages"]
         return []
 
+    def update_message(self, message: BaseMessage) -> None:
+        """Update a message.
+
+        Old message will be replaced according to the message id.
+        If the message id is not found, the message will be appended to the end
+        of the messages.
+
+        Args:
+            message: The message to update.
+        """
+        if self.agent is None:
+            raise ValueError("Agent is not initialized.")
+        past_messages = self.get_past_messages()
+        self.agent.update_state(self.config, {"messages": past_messages + [message]})
+
     async def get_response(
         self,
         user_input: str,
@@ -76,12 +92,30 @@ if __name__ == "__main__":
 
     load_dotenv()
 
+    def update_tool_data(message: ToolMessage) -> ToolMessage:
+        """Update the tool data."""
+        data = json.loads(message.content)
+        data["user_input"] = 10
+        message.content = json.dumps(data)
+        return message
+
     async def main():
         """Run the demo agent."""
         agent = Agent(config={"configurable": {"thread_id": "1"}})
 
         result = await agent.get_response(
             "Generate a number input between 0 and 100",
+        )
+        # pprint(result)
+
+        updated_tool_message = None
+        for msg in result:
+            if msg.type == "tool":
+                updated_tool_message = update_tool_data(msg)
+                agent.update_message(updated_tool_message)
+
+        result = await agent.get_response(
+            "What is the value of the number input?",
         )
         pprint(result)
 
