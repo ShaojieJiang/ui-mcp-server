@@ -6,6 +6,12 @@
 
 This project initiates at the [Power of Europe Hackathon 2025](https://rewirenow.com/en/resources/blog/power-of-europe-hackathon-building-with-european-ai/).
 
+## Demo
+
+[![Demo Video](https://img.youtube.com/vi/o_kE_zjVRKc/0.jpg)](https://www.youtube.com/watch?v=o_kE_zjVRKc)
+
+https://youtu.be/o_kE_zjVRKc
+
 ## Overview
 
 `ui-mcp-server` is an MCP server that generates specifications for a range of UI components, containing only essential data to remain framework-agnostic. Unlike existing solutions, `ui-mcp-server` is data-focused, acquiring and filling data during conversation sessions while leaving rendering entirely to frontend developers (for now).

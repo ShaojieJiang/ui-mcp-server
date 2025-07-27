@@ -1,304 +1,229 @@
-"""Streamlit demo main module."""
+"""Chat with the agent."""
 
 import asyncio
 import json
+import uuid
 from typing import Any
 import streamlit as st
-from agent import create_agent, get_agent_response
+from agent import Agent
 from dotenv import load_dotenv
+from langchain_core.messages import BaseMessage, ToolMessage
 
 
-# Load environment variables
 load_dotenv()
 
 
-def render_ui_component(component_data: dict[str, Any]) -> None:  # noqa: C901 PLR0912 PLR0915
-    """Render a UI component based on the provided dictionary data."""
-    try:
-        component_type = component_data.get("type", "").lower()
-        label = component_data.get("label", "Component")
-        key = component_data.get("key", f"component_{hash(str(component_data))}")
+class ChatPage:
+    """Chat page."""
 
-        if component_type == "number_input":
-            min_value = component_data.get("min_value", 0)
-            max_value = component_data.get("max_value", 100)
-            value = component_data.get("value", min_value)
-            step = component_data.get("step", 1)
-            st.number_input(
-                label,
-                min_value=min_value,
-                max_value=max_value,
-                value=value,
-                step=step,
-                key=key,
-            )
-
-        elif component_type == "slider":
-            min_value = component_data.get("min_value", 0)
-            max_value = component_data.get("max_value", 100)
-            value = component_data.get("value", min_value)
-            step = component_data.get("step", 1)
-            st.slider(
-                label,
-                min_value=min_value,
-                max_value=max_value,
-                value=value,
-                step=step,
-                key=key,
-            )
-
-        elif component_type == "selectbox":
-            options = component_data.get("options", [])
-            index = component_data.get("index", 0)
-            st.selectbox(label, options, index=index, key=key)
-
-        elif component_type == "multiselect":
-            options = component_data.get("options", [])
-            default = component_data.get("default", [])
-            st.multiselect(label, options, default=default, key=key)
-
-        elif component_type == "radio":
-            options = component_data.get("options", [])
-            index = component_data.get("index", 0)
-            st.radio(label, options, index=index, key=key)
-
-        elif component_type == "checkbox":
-            value = component_data.get("value", False)
-            st.checkbox(label, value=value, key=key)
-
-        elif component_type == "text_input":
-            value = component_data.get("value", "")
-            placeholder = component_data.get("placeholder", "")
-            st.text_input(label, value=value, placeholder=placeholder, key=key)
-
-        elif component_type == "text_area":
-            value = component_data.get("value", "")
-            height = component_data.get("height", None)
-            st.text_area(label, value=value, height=height, key=key)
-
-        elif component_type == "button":
-            button_type = component_data.get("button_type", "secondary")
-            if st.button(label, type=button_type, key=key):
-                st.success(f"Button '{label}' clicked!")
-
-        elif component_type in ("dataframe", "table"):
-            data = component_data.get("data", [])
-            if data:
-                st.dataframe(data, key=key)
-            else:
-                st.write("No data provided for table")
-
-        elif component_type == "form":
-            form_fields = component_data.get("fields", [])
-            with st.form(key=key):
-                for field in form_fields:
-                    render_ui_component(field)
-                if st.form_submit_button("Submit"):
-                    st.success("Form submitted!")
-
-        elif component_type == "columns":
-            columns_data = component_data.get("columns", [])
-            if columns_data:
-                cols = st.columns(len(columns_data))
-                for i, col_data in enumerate(columns_data):
-                    with cols[i]:
-                        if isinstance(col_data, dict):
-                            render_ui_component(col_data)
-                        else:
-                            st.write(col_data)
-
-        elif component_type == "metric":
-            value = component_data.get("value", "")
-            delta = component_data.get("delta", None)
-            st.metric(label, value, delta=delta)
-
-        elif component_type == "progress":
-            value = component_data.get("value", 0)
-            st.progress(value)
-
-        elif component_type == "json":
-            data = component_data.get("data", component_data)
-            st.json(data)
-
-        else:
-            # Fallback: display as JSON for unknown component types
-            st.json(component_data)
-
-    except Exception as e:
-        st.error(f"Error rendering component: {str(e)}")
-        st.json(component_data)  # Show raw data as fallback
-
-
-def initialize_session_state():
-    """Initialize Streamlit session state variables."""
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-    if "thread_id" not in st.session_state:
-        st.session_state.thread_id = "streamlit-chat"
-    if "agent" not in st.session_state:
-        st.session_state.agent = None
-
-
-async def get_mcp_response(user_input: str):
-    """Get response from MCP agent."""
-    # Create agent if not already created
-    if st.session_state.agent is None:
-        st.session_state.agent = await create_agent()
-
-    # Get agent response
-    config = {"configurable": {"thread_id": st.session_state.thread_id}}
-    return await get_agent_response(user_input, st.session_state.agent, config)
-
-
-def debug_response_structure(response):
-    """Debug and log response structure."""
-    st.write(f"Response type: {type(response)}")
-    st.write(f"Response has messages attr: {hasattr(response, 'messages')}")
-    st.write(f"Response is dict: {isinstance(response, dict)}")
-    if hasattr(response, "messages") or (
-        isinstance(response, dict) and "messages" in response
-    ):
-        messages = (
-            response.messages if hasattr(response, "messages") else response["messages"]
-        )
-        st.write(f"Number of messages: {len(messages)}")
-        for i, msg in enumerate(messages):
-            st.write(f"Message {i}: {type(msg).__name__}")
-
-
-def process_response_messages(response):
-    """Process and add response messages to session state."""
-    messages = None
-    if hasattr(response, "messages"):
-        messages = response.messages
-    elif isinstance(response, dict) and "messages" in response:
-        messages = response["messages"]
-
-    if messages:
-        # Skip the first message if it's the user's input (HumanMessage)
-        start_idx = (
-            1 if messages and str(type(messages[0]).__name__) == "HumanMessage" else 0
-        )
-
-        for message in messages[start_idx:]:
-            message_type = str(type(message).__name__)
-
-            # Handle AIMessages with content (skip empty AI messages)
-            if message_type == "AIMessage":
-                content = getattr(message, "content", "")
-                if content and content.strip():
-                    st.session_state.messages.append(
-                        {"role": "assistant", "content": content}
-                    )
-
-            # Handle ToolMessages
-            elif message_type == "ToolMessage":
-                st.session_state.messages.append(
-                    {"role": "assistant", "content": json.loads(message.content)}
-                )
-    else:
-        # Fallback for unexpected response format
-        st.session_state.messages.append(
-            {"role": "assistant", "content": str(response)}
-        )
-
-
-async def handle_user_input(user_input: str):
-    """Handle user input and get agent response."""
-    # Add user message to chat history
-    st.session_state.messages.append({"role": "user", "content": user_input})
-
-    try:
-        with st.spinner("Thinking..."):
-            response = await get_mcp_response(user_input)
-
-        # Debug response structure
-        debug_response_structure(response)
-
-        # Process the response messages
-        process_response_messages(response)
-
-    except Exception as e:
-        st.error(f"Error getting response: {str(e)}")
-
-
-def display_chat_history():
-    """Display the chat history."""
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            if isinstance(message["content"], str):
-                st.write(message["content"])
-            else:  # dict
-                render_ui_component(message["content"])
-
-
-async def main():
-    """Main Streamlit application."""
-    st.set_page_config(
-        page_title="UI MCP Server Chat Demo", page_icon="🤖", layout="wide"
-    )
-
-    st.title("🤖 UI MCP Server Chat Demo")
-    st.caption("Chat with an AI agent that can generate interactive UI components!")
-
-    # Initialize session state
-    initialize_session_state()
-
-    # Test MCP server availability
-    if "mcp_available" not in st.session_state:
-        with st.spinner("Checking MCP server availability..."):
-            try:
-                # Test by creating an agent
-                await create_agent()
-                st.session_state.mcp_available = True
-                st.success("✅ MCP server is available!")
-            except Exception as e:
-                st.error(f"❌ MCP server not available: {str(e)}")
-                st.error(
-                    "Make sure you have installed ui-mcp-server: "
-                    "`pip install ui-mcp-server`"
-                )
-                st.stop()
-
-    # Create two columns: chat and sidebar with examples
-    col1, col2 = st.columns([3, 1])
-
-    with col2:
-        st.subheader("💡 Try these examples:")
-        example_prompts = [
-            "Create a number input for age between 0 and 120",
-            "Generate a slider for temperature from -10 to 50",
-            "Make a radio button for choosing colors: red, blue, green",
-            "Create a multiselect for programming languages: Python, "
-            "JavaScript, Go, Rust",
-            "Show a table with sample user data",
-            "Generate a form with name input and country selection",
-        ]
-
-        for prompt in example_prompts:
-            if st.button(
-                prompt,
-                key=f"example_{hash(prompt)}",
-                use_container_width=True,
-            ):
-                await handle_user_input(prompt)
-                st.rerun()
-
-    with col1:
-        # Display chat history
-        st.subheader("💬 Chat")
-        display_chat_history()
-
-        # Chat input
-        if user_input := st.chat_input("Ask me to generate UI components..."):
-            await handle_user_input(user_input)
-            st.rerun()
-
-        # Clear chat button
-        if st.button("🗑️ Clear Chat", type="secondary"):
+    def __init__(self) -> None:
+        """Initialize the chat page."""
+        if "messages" not in st.session_state:
             st.session_state.messages = []
-            st.rerun()
+            st.session_state.session_id = str(uuid.uuid4())
+        self.messages: list[BaseMessage] = st.session_state.messages
+        self.agent = Agent(
+            config={"configurable": {"thread_id": st.session_state.session_id}}
+        )
+
+    def display_input_form(self, data: dict[str, Any]) -> None:
+        """Display the input form."""
+        match data["type"]:
+            case "number_input":
+                user_input = st.number_input(
+                    label=data["label"],
+                    min_value=data["min_value"],
+                    max_value=data["max_value"],
+                    value=data["value"],
+                    step=data["step"],
+                    key=data["key"],
+                    help=data.get("help"),
+                )
+            case "slider":
+                user_input = st.slider(
+                    label=data["label"],
+                    min_value=data["min_value"],
+                    max_value=data["max_value"],
+                    value=data["value"],
+                    step=data["step"],
+                    key=data["key"],
+                    help=data.get("help"),
+                )
+            case "radio":
+                user_input = st.radio(
+                    label=data["label"],
+                    options=data["options"],
+                    index=None,
+                    key=data["key"],
+                    help=data.get("help"),
+                )
+            case "multiselect":
+                user_input = st.multiselect(
+                    label=data["label"],
+                    options=data["options"],
+                    default=data["value"],
+                    key=data["key"],
+                    help=data.get("help"),
+                )
+            case "color_picker":
+                user_input = st.color_picker(
+                    label=data["label"],
+                    value=data["value"],
+                    key=data["key"],
+                    help=data.get("help"),
+                )
+            case "date_input":
+                user_input = st.date_input(
+                    label=data["label"],
+                    value=data["value"],
+                    min_value=data["min_value"],
+                    max_value=data["max_value"],
+                    format=data["format"],
+                    key=data["key"],
+                    help=data.get("help"),
+                )
+            case "time_input":
+                user_input = st.time_input(
+                    label=data["label"],
+                    value=data["value"],
+                    key=data["key"],
+                    help=data.get("help"),
+                    step=data["step"],
+                )
+            case "audio_input":
+                user_input = st.audio_input(
+                    label=data["label"],
+                    key=data["key"],
+                    help=data.get("help"),
+                )
+            case "camera_input":
+                user_input = st.camera_input(
+                    label=data["label"],
+                    key=data["key"],
+                    help=data.get("help"),
+                )
+            case _:
+                st.write("Unable to display the UI component.")
+                st.write(data)
+                user_input = None
+        return user_input
+
+    def display_output_component(self, data: dict[str, Any]) -> None:
+        """Display the output component."""
+        match data["type"]:
+            case "line":
+                st.line_chart(
+                    data["data"],
+                    x_label=data["x_label"],
+                    y_label=data["y_label"],
+                )
+            case "bar":
+                st.bar_chart(
+                    data["data"],
+                    x_label=data["x_label"],
+                    y_label=data["y_label"],
+                )
+            case "scatter":
+                st.scatter_chart(
+                    data["data"],
+                    x_label=data["x_label"],
+                    y_label=data["y_label"],
+                )
+            case "image":
+                st.image(
+                    data["url"],
+                    caption=data["caption"],
+                    width=data["width"],
+                    clamp=data["clamp"],
+                    channels=data["channels"],
+                    output_format=data["output_format"],
+                )
+            case "audio":
+                st.audio(
+                    data["url"],
+                    format=data["format"],
+                    sample_rate=data["sample_rate"],
+                    loop=data["loop"],
+                    autoplay=data["autoplay"],
+                )
+            case "video":
+                st.video(
+                    data["url"],
+                    format=data["format"],
+                    subtitles=data["subtitles"],
+                    muted=data["muted"],
+                    loop=data["loop"],
+                    autoplay=data["autoplay"],
+                )
+            case _:
+                st.write("Unable to display the UI component.")
+                st.write(data)
+
+    def display_ui_component(self, message: ToolMessage) -> None:
+        """Display the UI component."""
+        data = json.loads(message.content)
+        match data["type"]:
+            case (
+                "number_input"
+                | "slider"
+                | "radio"
+                | "multiselect"
+                | "color_picker"
+                | "date_input"
+                | "time_input"
+                | "audio_input"
+                | "camera_input"
+            ):
+                with st.form(key=message.tool_call_id):
+                    user_input = self.display_input_form(data)
+                    submit_button = st.form_submit_button("Submit")
+                    if submit_button:
+                        self.update_ui_input(message, user_input)
+                        self.get_agent_response(
+                            f"My input to {data['label']} is {user_input}"
+                        )
+            case "line" | "bar" | "scatter" | "image" | "audio" | "video":
+                self.display_output_component(data)
+            case _:
+                st.write("Unable to display the UI component.")
+                st.write(data)
+
+    def update_ui_input(self, message: ToolMessage, user_input: Any) -> None:
+        """Update the user input."""
+        data = json.loads(message.content)
+        data["value"] = user_input
+        message.content = json.dumps(data)
+        self.agent.update_message(message)
+
+    def display_messages(self) -> None:
+        """Display the messages."""
+        for message in self.messages:
+            message_type = (
+                message.type if message.type != "tool" else "assistant"
+            )  # display tool messages as assistant messages
+            if not message.content:
+                continue
+            with st.chat_message(message_type):
+                if message.type == "tool":
+                    self.display_ui_component(message)
+                else:
+                    st.write(message.content)
+
+    def get_agent_response(self, user_text: str) -> None:
+        """Get the agent response."""
+        self.messages.extend(asyncio.run(self.agent.get_response(user_text)))
+        st.rerun()
+
+    def main(self) -> None:
+        """Main function."""
+        st.title("Chat with `ui-mcp-server`")
+        self.display_messages()
+
+        if user_text := st.chat_input("Input your message..."):
+            st.chat_message("user").write(user_text)
+            self.get_agent_response(user_text)
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+if "page" not in st.session_state:
+    st.session_state.page = ChatPage()
+st.session_state.page.main()
