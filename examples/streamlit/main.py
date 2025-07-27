@@ -34,6 +34,7 @@ class ChatPage:
                     label=data["label"],
                     min_value=data["min_value"],
                     max_value=data["max_value"],
+                    value=data["value"],
                     step=data["step"],
                     key=data["key"],
                     help=data.get("help"),
@@ -43,6 +44,7 @@ class ChatPage:
                     label=data["label"],
                     min_value=data["min_value"],
                     max_value=data["max_value"],
+                    value=data["value"],
                     step=data["step"],
                     key=data["key"],
                     help=data.get("help"),
@@ -51,6 +53,7 @@ class ChatPage:
                 user_input = st.radio(
                     label=data["label"],
                     options=data["options"],
+                    index=None,
                     key=data["key"],
                     help=data.get("help"),
                 )
@@ -58,6 +61,7 @@ class ChatPage:
                 user_input = st.multiselect(
                     label=data["label"],
                     options=data["options"],
+                    default=data["value"],
                     key=data["key"],
                     help=data.get("help"),
                 )
@@ -86,14 +90,13 @@ class ChatPage:
     def update_ui_input(self, message: ToolMessage, user_input: Any) -> None:
         """Update the user input."""
         data = json.loads(message.content)
-        data["user_input"] = user_input
+        data["value"] = user_input
         message.content = json.dumps(data)
         self.agent.update_message(message)
 
     def display_messages(self) -> None:
         """Display the messages."""
         for message in self.messages:
-            print(message)
             message_type = (
                 message.type if message.type != "tool" else "assistant"
             )  # display tool messages as assistant messages

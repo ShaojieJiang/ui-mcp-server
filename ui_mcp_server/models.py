@@ -10,7 +10,7 @@ class BaseComponent(BaseModel, use_attribute_docstrings=True):
 
     type: str
     """Type identifier for the UI component."""
-    key: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    key: str = Field(default_factory=lambda: str(uuid.uuid4()), init=False)
     """Unique identifier for the component."""
 
 
@@ -21,8 +21,8 @@ class InputComponent(BaseComponent):
     """Label of the component for the user to see."""
     help: str | None = None
     """Optional help text for the component."""
-    user_input: Any | None = None
-    """User-provided answer for the component."""
+    value: Any | None = None
+    """Initial of the component."""
 
 
 class OutputComponent(BaseComponent):
@@ -42,8 +42,8 @@ class NumberInput(InputComponent):
     """Maximum value for the component."""
     step: int | float | None = None
     """Step for the component."""
-    user_input: int | float | None = None
-    """Value input by the user for the component."""
+    value: int | float | None = None
+    """Initial value of the component."""
 
 
 class Choice(InputComponent):
@@ -53,8 +53,8 @@ class Choice(InputComponent):
     """UI component type."""
     options: list[str]
     """Available selection options."""
-    user_input: int | str | list[str] | None = None
-    """Selected value(s) from the options."""
+    value: int | str | list[str] | None = None
+    """Initial value(s) from the options."""
 
 
 class TableOutput(OutputComponent):

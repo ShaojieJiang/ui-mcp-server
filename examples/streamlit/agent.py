@@ -95,7 +95,7 @@ if __name__ == "__main__":
     def update_tool_data(message: ToolMessage) -> ToolMessage:
         """Update the tool data."""
         data = json.loads(message.content)
-        data["user_input"] = 10
+        data["value"] = 10
         message.content = json.dumps(data)
         return message
 
@@ -106,7 +106,7 @@ if __name__ == "__main__":
         result = await agent.get_response(
             "Generate a number input between 0 and 100",
         )
-        # pprint(result)
+        pprint(result)
 
         updated_tool_message = None
         for msg in result:
