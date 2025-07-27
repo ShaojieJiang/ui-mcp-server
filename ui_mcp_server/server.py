@@ -1,7 +1,19 @@
 """Tools for UI components."""
 
 from mcp.server.fastmcp import FastMCP
-from ui_mcp_server.models import Chart, Choice, NumberInput
+from ui_mcp_server.models import (
+    AudioInput,
+    AudioOutput,
+    CameraInput,
+    Chart,
+    Choice,
+    ColorPicker,
+    DateInput,
+    ImageOutput,
+    NumberInput,
+    TimeInput,
+    VideoOutput,
+)
 
 
 server = FastMCP("ui-mcp-server")
@@ -39,6 +51,86 @@ def chart(params: Chart) -> Chart:
 
     Args:
         params: Parameters for the chart component.
+    """
+    return params
+
+
+@server.tool()
+def color_picker(params: ColorPicker) -> ColorPicker:
+    """Generate a color picker component.
+
+    Args:
+        params: Parameters for the color picker component.
+    """
+    return params
+
+
+@server.tool()
+def date_input(params: DateInput) -> DateInput:
+    """Generate a date input component.
+
+    Args:
+        params: Parameters for the date input component.
+    """
+    return params
+
+
+@server.tool()
+def time_input(params: TimeInput) -> TimeInput:
+    """Generate a time input component.
+
+    Args:
+        params: Parameters for the time input component.
+    """
+    return params
+
+
+@server.tool()
+def audio_input(params: AudioInput) -> AudioInput:
+    """Generate an audio input component.
+
+    Args:
+        params: Parameters for the audio input component.
+    """
+    return params
+
+
+@server.tool()
+def camera_input(params: CameraInput) -> CameraInput:
+    """Generate a camera input component.
+
+    Args:
+        params: Parameters for the camera input component.
+    """
+    return params
+
+
+@server.tool()
+def audio_output(params: AudioOutput) -> AudioOutput:
+    """Generate an audio output component.
+
+    Args:
+        params: Parameters for the audio output component.
+    """
+    return params
+
+
+@server.tool()
+def video_output(params: VideoOutput) -> VideoOutput:
+    """Generate a video output component.
+
+    Args:
+        params: Parameters for the video output component.
+    """
+    return params
+
+
+@server.tool()
+def image_output(params: ImageOutput) -> ImageOutput:
+    """Generate an image output component.
+
+    Args:
+        params: Parameters for the image output component.
     """
     return params
 

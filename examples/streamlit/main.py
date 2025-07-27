@@ -65,25 +65,52 @@ class ChatPage:
                     key=data["key"],
                     help=data.get("help"),
                 )
+            case "color_picker":
+                user_input = st.color_picker(
+                    label=data["label"],
+                    value=data["value"],
+                    key=data["key"],
+                    help=data.get("help"),
+                )
+            case "date_input":
+                user_input = st.date_input(
+                    label=data["label"],
+                    value=data["value"],
+                    min_value=data["min_value"],
+                    max_value=data["max_value"],
+                    format=data["format"],
+                    key=data["key"],
+                    help=data.get("help"),
+                )
+            case "time_input":
+                user_input = st.time_input(
+                    label=data["label"],
+                    value=data["value"],
+                    key=data["key"],
+                    help=data.get("help"),
+                    step=data["step"],
+                )
+            case "audio_input":
+                user_input = st.audio_input(
+                    label=data["label"],
+                    key=data["key"],
+                    help=data.get("help"),
+                )
+            case "camera_input":
+                user_input = st.camera_input(
+                    label=data["label"],
+                    key=data["key"],
+                    help=data.get("help"),
+                )
             case _:
                 st.write("Unable to display the UI component.")
                 st.write(data)
                 user_input = None
         return user_input
 
-    def display_ui_component(self, message: ToolMessage) -> None:
-        """Display the UI component."""
-        data = json.loads(message.content)
+    def display_output_component(self, data: dict[str, Any]) -> None:
+        """Display the output component."""
         match data["type"]:
-            case "number_input" | "slider" | "radio" | "multiselect":
-                with st.form(key=message.tool_call_id):
-                    user_input = self.display_input_form(data)
-                    submit_button = st.form_submit_button("Submit")
-                    if submit_button:
-                        self.update_ui_input(message, user_input)
-                        self.get_agent_response(
-                            f"My input to {data['label']} is {user_input}"
-                        )
             case "line":
                 st.line_chart(
                     data["data"],
@@ -102,6 +129,62 @@ class ChatPage:
                     x_label=data["x_label"],
                     y_label=data["y_label"],
                 )
+            case "image":
+                st.image(
+                    data["url"],
+                    caption=data["caption"],
+                    width=data["width"],
+                    clamp=data["clamp"],
+                    channels=data["channels"],
+                    output_format=data["output_format"],
+                )
+            case "audio":
+                st.audio(
+                    data["url"],
+                    format=data["format"],
+                    sample_rate=data["sample_rate"],
+                    loop=data["loop"],
+                    autoplay=data["autoplay"],
+                )
+            case "video":
+                st.video(
+                    data["url"],
+                    format=data["format"],
+                    subtitles=data["subtitles"],
+                    muted=data["muted"],
+                    loop=data["loop"],
+                    autoplay=data["autoplay"],
+                )
+            case _:
+                st.write("Unable to display the UI component.")
+                st.write(data)
+
+    def display_ui_component(self, message: ToolMessage) -> None:
+        """Display the UI component."""
+        print(message.content)
+        data = json.loads(message.content)
+        match data["type"]:
+            case (
+                "number_input"
+                | "slider"
+                | "radio"
+                | "multiselect"
+                | "color_picker"
+                | "date_input"
+                | "time_input"
+                | "audio_input"
+                | "camera_input"
+            ):
+                with st.form(key=message.tool_call_id):
+                    user_input = self.display_input_form(data)
+                    submit_button = st.form_submit_button("Submit")
+                    if submit_button:
+                        self.update_ui_input(message, user_input)
+                        self.get_agent_response(
+                            f"My input to {data['label']} is {user_input}"
+                        )
+            case "line" | "bar" | "scatter" | "image" | "audio" | "video":
+                self.display_output_component(data)
             case _:
                 st.write("Unable to display the UI component.")
                 st.write(data)
