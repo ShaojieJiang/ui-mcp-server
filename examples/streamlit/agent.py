@@ -1,5 +1,6 @@
 """Agent for the Streamlit demo."""
 
+from pprint import pprint
 from langchain_core.messages import BaseMessage
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.checkpoint.memory import InMemorySaver
@@ -21,8 +22,8 @@ class Agent:
         client = MultiServerMCPClient(
             {
                 "ui-mcp-server": {
-                    "command": "uvx",
-                    "args": ["ui-mcp-server"],
+                    "command": "python",
+                    "args": ["ui_mcp_server/server.py"],
                     "transport": "stdio",
                 }
             }
@@ -82,16 +83,16 @@ if __name__ == "__main__":
         result = await agent.get_response(
             "Generate a number input between 0 and 100",
         )
-        print(result)
+        pprint(result)
 
-        result = await agent.get_response(
-            "What did I just ask?",
-        )
-        print(result)
+        # result = await agent.get_response(
+        #     "What did I just ask?",
+        # )
+        # pprint(result)
 
-        result = await agent.get_response(
-            "What is the value of the number input?",
-        )
-        print(result)
+        # result = await agent.get_response(
+        #     "What is the value of the number input?",
+        # )
+        # pprint(result)
 
     asyncio.run(main())

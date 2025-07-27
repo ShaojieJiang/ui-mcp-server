@@ -2,7 +2,7 @@
 
 import uuid
 from typing import Any, Literal
-from pydantic import BaseModel, PrivateAttr
+from pydantic import BaseModel, Field
 
 
 class BaseComponent(BaseModel, use_attribute_docstrings=True):
@@ -10,7 +10,7 @@ class BaseComponent(BaseModel, use_attribute_docstrings=True):
 
     type: str
     """Type identifier for the UI component."""
-    _key: str = PrivateAttr(default_factory=lambda: str(uuid.uuid4()))
+    key: str = Field(default_factory=lambda: str(uuid.uuid4()))
     """Unique identifier for the component."""
 
 
@@ -21,7 +21,7 @@ class InputComponent(BaseComponent):
     """Label of the component for the user to see."""
     help: str | None = None
     """Optional help text for the component."""
-    _user_input: Any | None = PrivateAttr(default=None)
+    user_input: Any | None = None
     """User-provided answer for the component."""
 
 
@@ -42,7 +42,7 @@ class NumberInput(InputComponent):
     """Maximum value for the component."""
     step: int | float | None = None
     """Step for the component."""
-    _user_input: int | float | None = PrivateAttr(default=None)
+    user_input: int | float | None = None
     """Value input by the user for the component."""
 
 
@@ -53,7 +53,7 @@ class Choice(InputComponent):
     """UI component type."""
     options: list[str]
     """Available selection options."""
-    _user_input: int | str | list[str] | None = PrivateAttr(default=None)
+    user_input: int | str | list[str] | None = None
     """Selected value(s) from the options."""
 
 

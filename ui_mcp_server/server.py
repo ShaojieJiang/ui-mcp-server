@@ -1,7 +1,7 @@
 """Tools for UI components."""
 
 from mcp.server.fastmcp import FastMCP
-from .models import Choice, NumberInput, TableOutput
+from ui_mcp_server.models import Choice, NumberInput, TableOutput
 
 
 server = FastMCP("ui-mcp-server")
@@ -41,3 +41,7 @@ def table_output(params: TableOutput) -> TableOutput:
         params: Parameters for the table output component.
     """
     return params
+
+
+if __name__ == "__main__":
+    server.run()
