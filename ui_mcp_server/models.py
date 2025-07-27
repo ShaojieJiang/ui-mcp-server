@@ -57,10 +57,10 @@ class Choice(InputComponent):
     """Initial value(s) from the options."""
 
 
-class LineChart(OutputComponent):
-    """Parameters for line chart components."""
+class Chart(OutputComponent):
+    """Parameters for chart components."""
 
-    type: Literal["line_chart"]
+    type: Literal["line_chart", "bar_chart"]
     """UI component type."""
     data: list[int | float]
     """List of values for the component."""

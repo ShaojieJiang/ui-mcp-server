@@ -90,6 +90,12 @@ class ChatPage:
                     x_label=data["x_label"],
                     y_label=data["y_label"],
                 )
+            case "bar_chart":
+                st.bar_chart(
+                    data["data"],
+                    x_label=data["x_label"],
+                    y_label=data["y_label"],
+                )
             case _:
                 st.write("Unable to display the UI component.")
                 st.write(data)

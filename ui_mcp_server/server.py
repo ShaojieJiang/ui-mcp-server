@@ -1,7 +1,7 @@
 """Tools for UI components."""
 
 from mcp.server.fastmcp import FastMCP
-from ui_mcp_server.models import Choice, LineChart, NumberInput
+from ui_mcp_server.models import Chart, Choice, NumberInput
 
 
 server = FastMCP("ui-mcp-server")
@@ -34,11 +34,11 @@ def choice(params: Choice) -> Choice:
 
 
 @server.tool()
-def line_chart(params: LineChart) -> LineChart:
-    """Generate a line chart component.
+def chart(params: Chart) -> Chart:
+    """Generate a chart component.
 
     Args:
-        params: Parameters for the line chart component.
+        params: Parameters for the chart component.
     """
     return params
 
