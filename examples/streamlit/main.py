@@ -6,9 +6,6 @@ from typing import Any
 import streamlit as st
 from agent import create_agent, get_agent_response
 from dotenv import load_dotenv
-from langgraph.checkpoint.memory import InMemorySaver
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
 
 
 # Load environment variables
@@ -136,31 +133,21 @@ def initialize_session_state():
     """Initialize Streamlit session state variables."""
     if "messages" not in st.session_state:
         st.session_state.messages = []
-    if "checkpointer" not in st.session_state:
-        st.session_state.checkpointer = InMemorySaver()
     if "thread_id" not in st.session_state:
         st.session_state.thread_id = "streamlit-chat"
+    if "agent" not in st.session_state:
+        st.session_state.agent = None
 
 
 async def get_mcp_response(user_input: str):
     """Get response from MCP agent."""
-    server_params = StdioServerParameters(
-        command="uvx",
-        args=["ui-mcp-server"],
-    )
+    # Create agent if not already created
+    if st.session_state.agent is None:
+        st.session_state.agent = await create_agent()
 
-    async with stdio_client(server_params) as (read, write):
-        async with ClientSession(read, write) as session:
-            await session.initialize()
-
-            # Create agent for this request
-            agent = await create_agent(
-                session, checkpointer=st.session_state.checkpointer
-            )
-
-            # Get agent response
-            config = {"configurable": {"thread_id": st.session_state.thread_id}}
-            return await get_agent_response(user_input, agent, config)
+    # Get agent response
+    config = {"configurable": {"thread_id": st.session_state.thread_id}}
+    return await get_agent_response(user_input, st.session_state.agent, config)
 
 
 def debug_response_structure(response):
@@ -261,15 +248,10 @@ async def main():
     if "mcp_available" not in st.session_state:
         with st.spinner("Checking MCP server availability..."):
             try:
-                server_params = StdioServerParameters(
-                    command="uvx",
-                    args=["ui-mcp-server"],
-                )
-                async with stdio_client(server_params) as (read, write):
-                    async with ClientSession(read, write) as session:
-                        await session.initialize()
-                        st.session_state.mcp_available = True
-                        st.success("✅ MCP server is available!")
+                # Test by creating an agent
+                await create_agent()
+                st.session_state.mcp_available = True
+                st.success("✅ MCP server is available!")
             except Exception as e:
                 st.error(f"❌ MCP server not available: {str(e)}")
                 st.error(
