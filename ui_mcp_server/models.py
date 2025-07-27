@@ -60,7 +60,7 @@ class Choice(InputComponent):
 class TableOutput(OutputComponent):
     """Parameters for table output components. Be sure to generate a list of dictionaries as the `data` field."""  # noqa: E501
 
-    type: str = "dataframe"
+    type: Literal["table"]
     """UI component type."""
     data: list[dict]
     """List of JSON objects for the component."""

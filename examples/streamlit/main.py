@@ -33,14 +33,39 @@ class ChatPage:
                 st.number_input(
                     label=data["label"],
                     min_value=data["min_value"],
+                    max_value=data["max_value"],
+                    step=data["step"],
+                    key=data["key"],
+                    help=data.get("help"),
                 )
-            case "choice":
-                st.selectbox(
+            case "slider":
+                st.slider(
+                    label=data["label"],
+                    min_value=data["min_value"],
+                    max_value=data["max_value"],
+                    step=data["step"],
+                    key=data["key"],
+                    help=data.get("help"),
+                )
+            case "radio":
+                st.radio(
                     label=data["label"],
                     options=data["options"],
+                    key=data["key"],
+                    help=data.get("help"),
                 )
-            case "table_output":
-                st.dataframe(data["data"])
+            case "multiselect":
+                st.multiselect(
+                    label=data["label"],
+                    options=data["options"],
+                    key=data["key"],
+                    help=data.get("help"),
+                )
+            case "table":
+                st.dataframe(data["data"], key=data["key"])
+            case _:
+                st.write("Unable to display the UI component.")
+                st.write(data)
 
     def display_messages(self) -> None:
         """Display the messages."""
