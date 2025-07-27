@@ -60,7 +60,7 @@ class Choice(InputComponent):
 class Chart(OutputComponent):
     """Parameters for chart components."""
 
-    type: Literal["line_chart", "bar_chart"]
+    type: Literal["line", "bar", "scatter"]
     """UI component type."""
     data: list[int | float]
     """List of values for the component."""

@@ -84,14 +84,20 @@ class ChatPage:
                         self.get_agent_response(
                             f"My input to {data['label']} is {user_input}"
                         )
-            case "line_chart":
+            case "line":
                 st.line_chart(
                     data["data"],
                     x_label=data["x_label"],
                     y_label=data["y_label"],
                 )
-            case "bar_chart":
+            case "bar":
                 st.bar_chart(
+                    data["data"],
+                    x_label=data["x_label"],
+                    y_label=data["y_label"],
+                )
+            case "scatter":
+                st.scatter_chart(
                     data["data"],
                     x_label=data["x_label"],
                     y_label=data["y_label"],
