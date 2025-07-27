@@ -135,5 +135,5 @@ def image_output(params: ImageOutput) -> ImageOutput:
     return params
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     server.run()
