@@ -104,7 +104,7 @@ class AudioInput(InputComponent):
 class CameraInput(InputComponent):
     """Configuration for camera input components."""
 
-    type: Literal["camera_input"]
+    type: str = "camera_input"
     """UI component type."""
 
 

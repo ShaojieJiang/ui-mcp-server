@@ -161,7 +161,6 @@ class ChatPage:
 
     def display_ui_component(self, message: ToolMessage) -> None:
         """Display the UI component."""
-        print(message.content)
         data = json.loads(message.content)
         match data["type"]:
             case (
@@ -217,7 +216,7 @@ class ChatPage:
 
     def main(self) -> None:
         """Main function."""
-        st.title("Chat with UI Agent")
+        st.title("Chat with `ui-mcp-server`")
         self.display_messages()
 
         if user_text := st.chat_input("Input your message..."):
