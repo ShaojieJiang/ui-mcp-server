@@ -1,22 +1,27 @@
 """Agent for the Streamlit demo."""
 
-from langchain_mcp_adapters.tools import load_mcp_tools
+from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import create_react_agent
-from langgraph.types import Checkpointer
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
 
 
-async def create_agent(
-    session: ClientSession,
-    model: str = "openai:gpt-4o-mini",
-    checkpointer: Checkpointer | None = None,
-):
+async def create_agent(model: str = "openai:gpt-4o-mini") -> CompiledStateGraph:
     """Create an agent with MCP tools."""
-    tools = await load_mcp_tools(session)
-    prompt_msg = await session.get_prompt("ui_component_prompt")
-    prompt = prompt_msg.messages[-1].content.text
+    client = MultiServerMCPClient(
+        {
+            "ui-mcp-server": {
+                "command": "uvx",
+                "args": ["ui-mcp-server"],
+                "transport": "stdio",
+            }
+        }
+    )
+    tools = await client.get_tools()
+    prompt_msg = await client.get_prompt("ui-mcp-server", "ui_component_prompt")
+    prompt = prompt_msg[-1].content
+    checkpointer = InMemorySaver()
+
     return create_react_agent(
         model,
         tools,
@@ -49,23 +54,14 @@ if __name__ == "__main__":
 
     async def main():
         """Run the demo agent."""
-        server_params = StdioServerParameters(
-            command="uvx",
-            args=["ui-mcp-server@latest"],
+        agent = await create_agent()
+        config = {"configurable": {"thread_id": "1"}}
+
+        result = await get_agent_response(
+            "Generate a number input between 0 and 100",
+            agent,
+            config,
         )
-        # TODO: find a more elegant way to maintain the session
-        async with stdio_client(server_params) as (read, write):
-            async with ClientSession(read, write) as session:
-                await session.initialize()
-
-                agent = await create_agent(session, checkpointer=checkpointer)
-                config = {"configurable": {"thread_id": "1"}}
-
-                result = await get_agent_response(
-                    "Generate a number input between 0 and 100",
-                    agent,
-                    config,
-                )
-                print(result)
+        print(result)
 
     asyncio.run(main())

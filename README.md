@@ -65,7 +65,7 @@ We might have missed something as the expected version below didn't work:
 
 ## Core concepts
 
-- UI-as-a-tool: `ui-mcp-server` provides tools that can be used to generate UI components. To this end, frequently used UI components are defined as tools, and the data required for each tool is acquired during the conversation session. The data extraction part is taken care of by AI agents using this MCP server. See our Streamlit demo for an example (to be updated).
+- UI-as-a-tool: `ui-mcp-server` provides tools that can be used to generate UI components. To this end, frequently used UI components are defined as tools, and the data required for each tool is acquired during the conversation session. The data extraction part is taken care of by AI agents using this MCP server. See our [Streamlit demo](examples/streamlit/) for an example.
 - Component standardisation: To be agnostic of frontend frameworks, `ui-mcp-server` defines a standardised component library, which is basically a set of JSON schemas for UI components, with some values are predefined, and others are left to be filled by AI.
 
 ## Related Projects

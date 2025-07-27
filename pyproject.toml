@@ -51,6 +51,17 @@ branch = true
 command_line = "-m pytest"
 source = ["ui_mcp_server"]
 
+[tool.hatch.build.targets.wheel]
+exclude = [
+  "examples/",
+  "tests/",
+  "docs/",
+  ".github/",
+  "*.md",
+  "Makefile",
+  "mkdocs.yml"
+]
+
 [tool.mypy]
 disallow_untyped_defs = true
 ignore_missing_imports = true
