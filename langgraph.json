@@ -1,0 +1,8 @@
+{
+    "dependencies": ["."],
+    "graphs": {
+      "ui_agent": "./examples/backend/agent.py:agent"
+    },
+    "env": ".env",
+    "image_distro": "wolfi"
+  }
