@@ -26,6 +26,7 @@ docs = [
 
 [project]
 dependencies = [
+  "langgraph-cli[inmem]>=0.3.6",
   "mcp[cli]>=1.12.2"
 ]
 description = "Add your description here"
