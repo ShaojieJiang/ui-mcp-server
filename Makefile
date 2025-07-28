@@ -13,3 +13,9 @@ test:
 
 doc:
 	mkdocs serve --dev-addr=0.0.0.0:8080
+
+demo-backend:
+	langgraph dev
+
+demo-streamlit:
+	streamlit run examples/frontend/streamlit/main.py
