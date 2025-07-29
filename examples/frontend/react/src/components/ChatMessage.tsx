@@ -25,7 +25,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   };
 
   const getMessageStyle = () => {
-    if (isUser) return 'bg-primary text-primary-foreground ml-12';
+    if (isUser) return 'bg-blue-500 text-white ml-12';
     if (isTool) return 'bg-accent text-accent-foreground';
     return 'bg-muted text-muted-foreground mr-12';
   };
@@ -73,7 +73,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
       </div>
 
       {isUser && (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center">
           {getIcon()}
         </div>
       )}
