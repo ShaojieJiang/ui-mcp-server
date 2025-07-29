@@ -7,6 +7,8 @@ format:
 	ruff format .
 	ruff check . --select I001 --fix
 	ruff check . --select F401 --fix
+	cd examples/frontend/react && [ -d node_modules ] || npm install
+	cd examples/frontend/react && npm run format
 
 test:
 	pytest --cov --cov-report term-missing tests/
@@ -19,3 +21,15 @@ demo-backend:
 
 demo-streamlit:
 	streamlit run examples/frontend/streamlit/main.py
+
+install-backend:
+	uv pip install -r examples/backend/requirements.txt
+
+install-streamlit:
+	uv pip install -r examples/frontend/streamlit/requirements.txt
+
+install-react:
+	cd examples/frontend/react && npm install
+
+demo-react:
+	cd examples/frontend/react && npm run dev
