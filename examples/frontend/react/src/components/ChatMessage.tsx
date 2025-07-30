@@ -33,7 +33,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   const renderContent = () => {
     if (isTool && message.content) {
       try {
-        const component: UIComponent = JSON.parse(message.content);
+        const component: UIComponent = JSON.parse(message.content as string);
         return (
           <UIComponentRenderer
             component={component}
@@ -48,6 +48,31 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
       }
     }
 
+    // Handle multi-content messages (text + images)
+    if (Array.isArray(message.content)) {
+      return (
+        <div className="space-y-2">
+          {message.content.map((content, index) => (
+            <div key={index}>
+              {content.type === 'text' && content.text && (
+                <div className="whitespace-pre-wrap break-words">
+                  {content.text}
+                </div>
+              )}
+              {content.type === 'image_url' && content.image_url && (
+                <img
+                  src={content.image_url.url}
+                  alt="Uploaded image"
+                  className="max-w-sm rounded-lg border"
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // Handle simple string content
     return (
       <div className="whitespace-pre-wrap break-words">{message.content}</div>
     );

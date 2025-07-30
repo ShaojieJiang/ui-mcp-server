@@ -101,10 +101,18 @@ export type UIComponent =
   | VideoOutput
   | ImageOutput;
 
+export interface MessageContent {
+  type: 'text' | 'image_url';
+  text?: string;
+  image_url?: {
+    url: string;
+  };
+}
+
 export interface Message {
   id: string;
   type: 'human' | 'ai' | 'tool';
-  content: string;
+  content: string | MessageContent[];
   tool_call_id?: string;
   timestamp: Date;
 }

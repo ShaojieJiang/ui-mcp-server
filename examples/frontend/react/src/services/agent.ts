@@ -1,6 +1,14 @@
+export interface MessageContent {
+  type: 'text' | 'image_url';
+  text?: string;
+  image_url?: {
+    url: string;
+  };
+}
+
 export interface AgentMessage {
   role: 'human' | 'ai' | 'tool';
-  content: string;
+  content: string | MessageContent[];
   type?: string;
   tool_call_id?: string;
   id?: string;
@@ -79,9 +87,56 @@ export class AgentService {
     }
   }
 
-  async getResponse(userInput: string): Promise<AgentMessage[]> {
+  private async fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Extract base64 part (remove data:image/...;base64, prefix)
+        const base64 = result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async getResponse(
+    userInput: string | { text: string; files: File[] }
+  ): Promise<AgentMessage[]> {
     try {
       const pastMessages = await this.getPastMessages();
+
+      let messageContent: string | MessageContent[];
+
+      if (typeof userInput === 'string') {
+        messageContent = userInput;
+      } else {
+        // Convert to multi-content format
+        const content: MessageContent[] = [];
+
+        if (userInput.text) {
+          content.push({
+            type: 'text',
+            text: userInput.text,
+          });
+        }
+
+        // Convert files to base64 and add to content
+        for (const file of userInput.files) {
+          if (file.type.startsWith('image/')) {
+            const base64 = await this.fileToBase64(file);
+            content.push({
+              type: 'image_url',
+              image_url: {
+                url: `data:${file.type};base64,${base64}`,
+              },
+            });
+          }
+        }
+
+        messageContent = content;
+      }
 
       const response = await fetch(`${this.baseUrl}/runs/wait`, {
         method: 'POST',
@@ -95,7 +150,7 @@ export class AgentService {
             messages: [
               {
                 role: 'human',
-                content: userInput,
+                content: messageContent,
               },
             ],
           },

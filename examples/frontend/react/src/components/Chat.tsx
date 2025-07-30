@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ChatMessage } from './ChatMessage';
-import { ChatInput } from './ChatInput';
+import { ChatInput, ChatInputValue } from './ChatInput';
 import { AgentService } from '../services/agent';
 import { Message, UIComponent } from '../types/ui-components';
 import { Card, CardHeader, CardTitle } from './ui/Card';
@@ -47,13 +47,28 @@ export const Chat: React.FC = () => {
     loadPastMessages();
   }, [agent]);
 
-  const handleSendMessage = async (content: string) => {
+  const handleSendMessage = async (input: ChatInputValue) => {
     if (loading) return;
+
+    // Create display content for the user message
+    const displayContent = [];
+    if (input.text) {
+      displayContent.push({ type: 'text', text: input.text });
+    }
+    for (const file of input.files) {
+      displayContent.push({
+        type: 'image_url',
+        image_url: { url: URL.createObjectURL(file) },
+      });
+    }
 
     const userMessage: Message = {
       id: uuidv4(),
       type: 'human',
-      content,
+      content:
+        displayContent.length === 1 && displayContent[0].type === 'text'
+          ? displayContent[0].text
+          : displayContent,
       timestamp: new Date(),
     };
 
@@ -61,7 +76,7 @@ export const Chat: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await agent.getResponse(content);
+      const response = await agent.getResponse(input);
 
       const newMessages: Message[] = response
         .filter((msg) => {
@@ -128,7 +143,7 @@ export const Chat: React.FC = () => {
 
       // Send follow-up message about the input
       const followUpContent = `My input to ${component.label} is ${value}`;
-      await handleSendMessage(followUpContent);
+      await handleSendMessage({ text: followUpContent, files: [] });
     } catch (error) {
       console.error('Failed to submit component value:', error);
     }
