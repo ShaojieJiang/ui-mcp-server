@@ -3,6 +3,7 @@
 import json
 import uuid
 from pprint import pprint
+from langchain_core.messages import HumanMessage
 from langgraph_sdk import get_client
 
 
@@ -49,7 +50,7 @@ class Agent:
 
     async def get_response(
         self,
-        user_input: str,
+        user_input: HumanMessage,
     ) -> list[dict]:
         """Get response from an existing agent and return new messages."""
         past_messages = await self.get_past_messages()
@@ -58,10 +59,7 @@ class Agent:
             "ui_agent",  # Name of assistant. Defined in langgraph.json.
             input={
                 "messages": [
-                    {
-                        "role": "human",
-                        "content": user_input,
-                    }
+                    user_input.model_dump(),
                 ],
             },
         )
