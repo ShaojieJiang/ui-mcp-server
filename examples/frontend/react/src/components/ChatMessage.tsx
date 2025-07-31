@@ -32,20 +32,14 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 
   const renderContent = () => {
     if (isTool && message.content) {
-      try {
-        const component: UIComponent = JSON.parse(message.content as string);
-        return (
-          <UIComponentRenderer
-            component={component}
-            onSubmit={(value) => onComponentSubmit?.(message.id, value)}
-          />
-        );
-      } catch (error) {
-        console.error('Failed to parse tool message content:', error);
-        return (
-          <div className="text-destructive">Failed to render UI component</div>
-        );
-      }
+      // Since we now filter out failed tool calls, we can assume valid JSON
+      const component: UIComponent = JSON.parse(message.content as string);
+      return (
+        <UIComponentRenderer
+          component={component}
+          onSubmit={(value) => onComponentSubmit?.(message.id, value)}
+        />
+      );
     }
 
     // Handle multi-content messages (text + images)

@@ -26,18 +26,35 @@ export const Chat: React.FC = () => {
     const loadPastMessages = async () => {
       try {
         const pastMessages = await agent.getPastMessages();
-        const convertedMessages: Message[] = pastMessages.map((msg) => ({
-          id: msg.id || uuidv4(),
-          type:
-            msg.role === 'human'
-              ? 'human'
-              : msg.type === 'tool'
-                ? 'tool'
-                : 'ai',
-          content: msg.content,
-          tool_call_id: msg.tool_call_id,
-          timestamp: new Date(),
-        }));
+        const convertedMessages: Message[] = pastMessages
+          .filter((msg) => {
+            // Filter out failed tool calls from past messages too
+            if (msg.type === 'tool' && msg.content) {
+              try {
+                JSON.parse(msg.content as string);
+                return true;
+              } catch (error) {
+                console.log(
+                  'Filtering out failed tool call from history:',
+                  msg.content
+                );
+                return false;
+              }
+            }
+            return true;
+          })
+          .map((msg) => ({
+            id: msg.id || uuidv4(),
+            type:
+              msg.role === 'human'
+                ? 'human'
+                : msg.type === 'tool'
+                  ? 'tool'
+                  : 'ai',
+            content: msg.content,
+            tool_call_id: msg.tool_call_id,
+            timestamp: new Date(),
+          }));
         setMessages(convertedMessages);
       } catch (error) {
         console.error('Failed to load past messages:', error);
@@ -86,6 +103,20 @@ export const Chat: React.FC = () => {
           // Filter out empty AI messages
           if (msg.type === 'ai' && (!msg.content || msg.content.trim() === ''))
             return false;
+
+          // Filter out failed tool calls (tool messages that don't contain valid JSON)
+          if (msg.type === 'tool' && msg.content) {
+            try {
+              JSON.parse(msg.content as string);
+              return true;
+            } catch (error) {
+              console.log(
+                'Filtering out failed tool call with invalid JSON:',
+                msg.content
+              );
+              return false;
+            }
+          }
 
           return true;
         })
