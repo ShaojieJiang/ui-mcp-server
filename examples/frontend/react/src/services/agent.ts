@@ -24,8 +24,10 @@ export class AgentService {
   constructor(threadId: string, baseUrl?: string) {
     this.threadId = threadId;
     // Convert relative path to full URL for the SDK
-    const fullUrl = baseUrl 
-      ? (baseUrl.startsWith('http') ? baseUrl : `${window.location.origin}${baseUrl}`)
+    const fullUrl = baseUrl
+      ? baseUrl.startsWith('http')
+        ? baseUrl
+        : `${window.location.origin}${baseUrl}`
       : undefined;
     this.client = new Client({ apiUrl: fullUrl });
     this.assistantId = 'ui_agent';

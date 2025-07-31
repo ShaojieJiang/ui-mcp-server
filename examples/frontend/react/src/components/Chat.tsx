@@ -105,7 +105,11 @@ export const Chat: React.FC = () => {
           if (msg.type === 'human') return false;
 
           // Filter out empty AI messages
-          if (msg.type === 'ai' && (!msg.content || (typeof msg.content === 'string' && msg.content.trim() === '')))
+          if (
+            msg.type === 'ai' &&
+            (!msg.content ||
+              (typeof msg.content === 'string' && msg.content.trim() === ''))
+          )
             return false;
 
           // Filter out failed tool calls (tool messages that don't contain valid JSON)
