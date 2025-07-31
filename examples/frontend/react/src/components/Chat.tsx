@@ -93,6 +93,7 @@ export const Chat: React.FC = () => {
       timestamp: new Date(),
     };
 
+    // Update UI immediately for better responsiveness
     setMessages((prev) => [...prev, userMessage]);
     setLoading(true);
 
@@ -153,19 +154,38 @@ export const Chat: React.FC = () => {
   };
 
   const handleComponentSubmit = async (messageId: string, value: any) => {
+    // Find the message and update its component value
+    const message = messages.find((m) => m.id === messageId);
+    if (!message) return;
+
+    const component: UIComponent = JSON.parse(message.content as string);
+    const updatedComponent = { ...component, value };
+
+    const updatedMessage = {
+      ...message,
+      content: JSON.stringify(updatedComponent),
+    };
+
+    // Update local state immediately for better responsiveness
+    setMessages((prev) =>
+      prev.map((m) => (m.id === messageId ? updatedMessage : m))
+    );
+
+    // Send follow-up message about the input immediately
+    const componentLabel = (component as any).label || 'component';
+    const followUpContent = `My input to ${componentLabel} is ${value}`;
+
+    // Add follow-up message to UI immediately
+    const followUpMessage: Message = {
+      id: uuidv4(),
+      type: 'human',
+      content: followUpContent,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, followUpMessage]);
+    setLoading(true);
+
     try {
-      // Find the message and update its component value
-      const message = messages.find((m) => m.id === messageId);
-      if (!message) return;
-
-      const component: UIComponent = JSON.parse(message.content as string);
-      const updatedComponent = { ...component, value };
-
-      const updatedMessage = {
-        ...message,
-        content: JSON.stringify(updatedComponent),
-      };
-
       // Update the message in the agent's state
       await agent.updateMessage({
         role: 'tool',
@@ -175,26 +195,72 @@ export const Chat: React.FC = () => {
         id: message.id,
       });
 
-      // Update local state
-      setMessages((prev) =>
-        prev.map((m) => (m.id === messageId ? updatedMessage : m))
-      );
+      // Get agent response to the follow-up message directly (bypasses handleSendMessage to avoid duplicate)
+      const response = await agent.getResponse({
+        text: followUpContent,
+        files: [],
+      });
 
-      // Send follow-up message about the input
-      const componentLabel = (component as any).label || 'component';
-      const followUpContent = `My input to ${componentLabel} is ${value}`;
-      await handleSendMessage({ text: followUpContent, files: [] });
+      const newMessages: Message[] = response
+        .filter((msg) => {
+          // Filter out the echo of user's message and empty AI messages
+          if (msg.type === 'human') return false;
+          if (
+            msg.type === 'ai' &&
+            (!msg.content ||
+              (typeof msg.content === 'string' && msg.content.trim() === ''))
+          )
+            return false;
+
+          // Filter out failed tool calls
+          if (msg.type === 'tool' && msg.content) {
+            try {
+              JSON.parse(msg.content as string);
+              return true;
+            } catch (error) {
+              console.log(
+                'Filtering out failed tool call with invalid JSON:',
+                msg.content
+              );
+              return false;
+            }
+          }
+
+          return true;
+        })
+        .map((msg) => ({
+          id: msg.id || uuidv4(),
+          type: msg.type === 'tool' ? 'tool' : 'ai',
+          content: msg.content,
+          tool_call_id: msg.tool_call_id,
+          timestamp: new Date(),
+        }));
+
+      setMessages((prev) => [...prev, ...newMessages]);
     } catch (error) {
       console.error('Failed to submit component value:', error);
+      const errorMessage: Message = {
+        id: uuidv4(),
+        type: 'ai',
+        content:
+          'Sorry, I encountered an error while processing your request. Please make sure the backend server is running.',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleClearChat = async () => {
+    // Clear UI immediately for better responsiveness
+    setMessages([]);
+
     try {
       await agent.clearHistory();
-      setMessages([]);
     } catch (error) {
       console.error('Failed to clear chat history:', error);
+      // If server fails, we could optionally reload messages, but keeping UI clear is better UX
     }
   };
 

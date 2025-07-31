@@ -25,12 +25,17 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   const handleSubmit = () => {
     if ((message.trim() || selectedFiles.length > 0) && !disabled && !loading) {
-      onSendMessage({
+      const inputValue = {
         text: message.trim(),
         files: selectedFiles,
-      });
+      };
+
+      // Clear input immediately for better responsiveness
       setMessage('');
       setSelectedFiles([]);
+
+      // Then send the message
+      onSendMessage(inputValue);
     }
   };
 
