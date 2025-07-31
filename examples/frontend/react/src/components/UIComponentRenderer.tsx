@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as Select from '@radix-ui/react-select';
 import * as Slider from '@radix-ui/react-slider';
 import * as RadioGroup from '@radix-ui/react-radio-group';
@@ -16,26 +16,117 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { ChevronDown, Check } from 'lucide-react';
+import { ChevronDown, Check, Folder, AlertCircle } from 'lucide-react';
 import { UIComponent } from '../types/ui-components';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Label } from './ui/Label';
 import { Card, CardContent } from './ui/Card';
 import { cn } from '../lib/utils';
+import { directoryAccessManager } from '../services/directoryAccess';
+
+// Helper function to detect if a URL is a local file path
+const isLocalFilePath = (url: string): boolean => {
+  return (
+    (url.startsWith('/') &&
+      !url.startsWith('//') &&
+      !url.startsWith('/http')) ||
+    url.match(/^[A-Za-z]:[\\\/]/) !== null || // Windows paths like C:\
+    url.startsWith('file://')
+  );
+};
+
+// Component for handling local file access
+const LocalFileAccessor: React.FC<{
+  filePath: string;
+  fileType: 'image' | 'audio' | 'video';
+  onFileLoaded: (url: string) => void;
+  onRequestAccess: () => void;
+}> = ({ filePath, fileType, onFileLoaded, onRequestAccess }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadFile = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const file = await directoryAccessManager.getFile(filePath);
+        if (file) {
+          const url = URL.createObjectURL(file);
+          onFileLoaded(url);
+        } else {
+          setError('File not found in authorized directories');
+        }
+      } catch (err) {
+        setError('Failed to access file');
+        console.error('File access error:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadFile();
+  }, [filePath, onFileLoaded]);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="p-6 text-center">
+          <div className="animate-pulse">
+            <div className="h-4 bg-muted rounded mb-2"></div>
+            <div className="h-4 bg-muted rounded w-3/4 mx-auto"></div>
+          </div>
+          <p className="text-sm text-muted-foreground mt-2">
+            Loading file from authorized directory...
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="p-6 text-center">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <AlertCircle className="w-6 h-6 text-yellow-600" />
+            <div>
+              <p className="font-medium">Cannot Access Local File</p>
+              <p className="text-sm text-muted-foreground mt-1">{filePath}</p>
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            You need to grant access to the directory containing this file.
+          </p>
+          <Button onClick={onRequestAccess} className="flex items-center gap-2">
+            <Folder className="w-4 h-4" />
+            Grant Directory Access
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return null;
+};
 
 interface UIComponentRendererProps {
   component: UIComponent;
   onValueChange?: (value: any) => void;
   onSubmit?: (value: any) => void;
+  onRequestDirectoryAccess?: () => void;
 }
 
 export const UIComponentRenderer: React.FC<UIComponentRendererProps> = ({
   component,
   onValueChange,
   onSubmit,
+  onRequestDirectoryAccess,
 }) => {
   const [currentValue, setCurrentValue] = useState(component.value);
+  const [localFileUrl, setLocalFileUrl] = useState<string | null>(null);
 
   const handleValueChange = (value: any) => {
     setCurrentValue(value);
@@ -296,11 +387,24 @@ export const UIComponentRenderer: React.FC<UIComponentRendererProps> = ({
         );
 
       case 'image':
+        // Handle local file paths
+        if (isLocalFilePath(component.url) && !localFileUrl) {
+          return (
+            <LocalFileAccessor
+              filePath={component.url}
+              fileType="image"
+              onFileLoaded={setLocalFileUrl}
+              onRequestAccess={() => onRequestDirectoryAccess?.()}
+            />
+          );
+        }
+
+        const imageUrl = localFileUrl || component.url;
         return (
           <Card>
             <CardContent className="p-6">
               <img
-                src={component.url}
+                src={imageUrl}
                 alt={component.caption || 'Image'}
                 width={component.width}
                 className={cn(
@@ -318,11 +422,24 @@ export const UIComponentRenderer: React.FC<UIComponentRendererProps> = ({
         );
 
       case 'audio':
+        // Handle local file paths
+        if (isLocalFilePath(component.url) && !localFileUrl) {
+          return (
+            <LocalFileAccessor
+              filePath={component.url}
+              fileType="audio"
+              onFileLoaded={setLocalFileUrl}
+              onRequestAccess={() => onRequestDirectoryAccess?.()}
+            />
+          );
+        }
+
+        const audioUrl = localFileUrl || component.url;
         return (
           <Card>
             <CardContent className="p-6">
               <audio
-                src={component.url}
+                src={audioUrl}
                 controls
                 loop={component.loop}
                 autoPlay={component.autoplay}
@@ -333,11 +450,24 @@ export const UIComponentRenderer: React.FC<UIComponentRendererProps> = ({
         );
 
       case 'video':
+        // Handle local file paths
+        if (isLocalFilePath(component.url) && !localFileUrl) {
+          return (
+            <LocalFileAccessor
+              filePath={component.url}
+              fileType="video"
+              onFileLoaded={setLocalFileUrl}
+              onRequestAccess={() => onRequestDirectoryAccess?.()}
+            />
+          );
+        }
+
+        const videoUrl = localFileUrl || component.url;
         return (
           <Card>
             <CardContent className="p-6">
               <video
-                src={component.url}
+                src={videoUrl}
                 controls
                 loop={component.loop}
                 muted={component.muted}

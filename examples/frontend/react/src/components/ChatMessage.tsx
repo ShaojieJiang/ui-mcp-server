@@ -8,11 +8,13 @@ import { cn } from '../lib/utils';
 interface ChatMessageProps {
   message: Message;
   onComponentSubmit?: (messageId: string, value: any) => void;
+  onRequestDirectoryAccess?: () => void;
 }
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({
   message,
   onComponentSubmit,
+  onRequestDirectoryAccess,
 }) => {
   const isUser = message.type === 'human';
   const isAI = message.type === 'ai';
@@ -38,6 +40,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
         <UIComponentRenderer
           component={component}
           onSubmit={(value) => onComponentSubmit?.(message.id, value)}
+          onRequestDirectoryAccess={onRequestDirectoryAccess}
         />
       );
     }

@@ -1,16 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { Settings } from 'lucide-react';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput, ChatInputValue } from './ChatInput';
+import { DirectorySettings } from './DirectorySettings';
 import { AgentService } from '../services/agent';
 import { Message, UIComponent } from '../types/ui-components';
 import { Card, CardHeader, CardTitle } from './ui/Card';
+import { Button } from './ui/Button';
 
 export const Chat: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [sessionId] = useState(() => uuidv4());
   const [agent] = useState(() => new AgentService(sessionId));
+  const [showDirectorySettings, setShowDirectorySettings] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -184,7 +188,20 @@ export const Chat: React.FC = () => {
     <div className="flex flex-col h-screen bg-background">
       <Card className="m-4 mb-0">
         <CardHeader>
-          <CardTitle className="text-center">Chat with UI MCP Server</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-center flex-1">
+              Chat with UI MCP Server
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowDirectorySettings(true)}
+              className="flex items-center gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              Local Files
+            </Button>
+          </div>
         </CardHeader>
       </Card>
 
@@ -203,6 +220,7 @@ export const Chat: React.FC = () => {
             key={message.id}
             message={message}
             onComponentSubmit={handleComponentSubmit}
+            onRequestDirectoryAccess={() => setShowDirectorySettings(true)}
           />
         ))}
 
@@ -218,6 +236,11 @@ export const Chat: React.FC = () => {
       </div>
 
       <ChatInput onSendMessage={handleSendMessage} loading={loading} />
+
+      <DirectorySettings
+        isVisible={showDirectorySettings}
+        onClose={() => setShowDirectorySettings(false)}
+      />
     </div>
   );
 };
