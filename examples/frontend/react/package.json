@@ -28,7 +28,8 @@
     "tailwind-merge": "^1.14.0",
     "lucide-react": "^0.263.1",
     "date-fns": "^2.30.0",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "@langchain/langgraph-sdk": "^0.0.103"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",

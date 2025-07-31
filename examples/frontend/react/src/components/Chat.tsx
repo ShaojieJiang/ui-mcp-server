@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Settings } from 'lucide-react';
+import { Settings, Trash2 } from 'lucide-react';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput, ChatInputValue } from './ChatInput';
 import { DirectorySettings } from './DirectorySettings';
-import { AgentService } from '../services/agent';
+import { AgentService, MessageContent } from '../services/agent';
 import { Message, UIComponent } from '../types/ui-components';
 import { Card, CardHeader, CardTitle } from './ui/Card';
 import { Button } from './ui/Button';
@@ -13,7 +13,7 @@ export const Chat: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [sessionId] = useState(() => uuidv4());
-  const [agent] = useState(() => new AgentService(sessionId));
+  const [agent] = useState(() => new AgentService(sessionId, '/api'));
   const [showDirectorySettings, setShowDirectorySettings] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -72,13 +72,13 @@ export const Chat: React.FC = () => {
     if (loading) return;
 
     // Create display content for the user message
-    const displayContent = [];
+    const displayContent: MessageContent[] = [];
     if (input.text) {
-      displayContent.push({ type: 'text', text: input.text });
+      displayContent.push({ type: 'text' as const, text: input.text });
     }
     for (const file of input.files) {
       displayContent.push({
-        type: 'image_url',
+        type: 'image_url' as const,
         image_url: { url: URL.createObjectURL(file) },
       });
     }
@@ -88,7 +88,7 @@ export const Chat: React.FC = () => {
       type: 'human',
       content:
         displayContent.length === 1 && displayContent[0].type === 'text'
-          ? displayContent[0].text
+          ? displayContent[0].text || ''
           : displayContent,
       timestamp: new Date(),
     };
@@ -105,7 +105,7 @@ export const Chat: React.FC = () => {
           if (msg.type === 'human') return false;
 
           // Filter out empty AI messages
-          if (msg.type === 'ai' && (!msg.content || msg.content.trim() === ''))
+          if (msg.type === 'ai' && (!msg.content || (typeof msg.content === 'string' && msg.content.trim() === '')))
             return false;
 
           // Filter out failed tool calls (tool messages that don't contain valid JSON)
@@ -154,7 +154,7 @@ export const Chat: React.FC = () => {
       const message = messages.find((m) => m.id === messageId);
       if (!message) return;
 
-      const component: UIComponent = JSON.parse(message.content);
+      const component: UIComponent = JSON.parse(message.content as string);
       const updatedComponent = { ...component, value };
 
       const updatedMessage = {
@@ -177,10 +177,20 @@ export const Chat: React.FC = () => {
       );
 
       // Send follow-up message about the input
-      const followUpContent = `My input to ${component.label} is ${value}`;
+      const componentLabel = (component as any).label || 'component';
+      const followUpContent = `My input to ${componentLabel} is ${value}`;
       await handleSendMessage({ text: followUpContent, files: [] });
     } catch (error) {
       console.error('Failed to submit component value:', error);
+    }
+  };
+
+  const handleClearChat = async () => {
+    try {
+      await agent.clearHistory();
+      setMessages([]);
+    } catch (error) {
+      console.error('Failed to clear chat history:', error);
     }
   };
 
@@ -192,15 +202,26 @@ export const Chat: React.FC = () => {
             <CardTitle className="text-center flex-1">
               Chat with UI MCP Server
             </CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowDirectorySettings(true)}
-              className="flex items-center gap-2"
-            >
-              <Settings className="w-4 h-4" />
-              Local Files
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearChat}
+                className="flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Clear Chat
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowDirectorySettings(true)}
+                className="flex items-center gap-2"
+              >
+                <Settings className="w-4 h-4" />
+                Local Files
+              </Button>
+            </div>
           </div>
         </CardHeader>
       </Card>

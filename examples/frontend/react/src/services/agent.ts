@@ -1,3 +1,5 @@
+import { Client } from '@langchain/langgraph-sdk';
+
 export interface MessageContent {
   type: 'text' | 'image_url';
   text?: string;
@@ -16,27 +18,33 @@ export interface AgentMessage {
 
 export class AgentService {
   private threadId: string;
-  private baseUrl: string;
+  private client: Client;
+  private assistantId: string;
 
-  constructor(threadId: string, baseUrl: string = '/api') {
+  constructor(threadId: string, baseUrl?: string) {
     this.threadId = threadId;
-    this.baseUrl = baseUrl;
+    // Convert relative path to full URL for the SDK
+    const fullUrl = baseUrl 
+      ? (baseUrl.startsWith('http') ? baseUrl : `${window.location.origin}${baseUrl}`)
+      : undefined;
+    this.client = new Client({ apiUrl: fullUrl });
+    this.assistantId = 'ui_agent';
   }
 
   async maybeCreateThread(): Promise<void> {
     try {
-      const response = await fetch(`${this.baseUrl}/threads/${this.threadId}`);
-      if (!response.ok && response.status === 404) {
-        await fetch(`${this.baseUrl}/threads`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            thread_id: this.threadId,
-            if_exists: 'do_nothing',
-          }),
-        });
+      // Try to get the thread, if it doesn't exist, create it
+      try {
+        await this.client.threads.get(this.threadId);
+      } catch (error: any) {
+        if (error.status === 404) {
+          await this.client.threads.create({
+            threadId: this.threadId,
+            ifExists: 'do_nothing',
+          });
+        } else {
+          throw error;
+        }
       }
     } catch (error) {
       console.error('Error creating thread:', error);
@@ -48,16 +56,10 @@ export class AgentService {
     await this.maybeCreateThread();
 
     try {
-      const response = await fetch(
-        `${this.baseUrl}/threads/${this.threadId}/history`
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const history = await response.json();
+      const history = await this.client.threads.getHistory(this.threadId);
       if (history.length > 0) {
-        return history[0].values.messages || [];
+        const state = history[0].values as any;
+        return state.messages || [];
       }
       return [];
     } catch (error) {
@@ -70,19 +72,26 @@ export class AgentService {
     try {
       const pastMessages = await this.getPastMessages();
 
-      await fetch(`${this.baseUrl}/threads/${this.threadId}/state`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
+      await this.client.threads.updateState(this.threadId, {
+        values: {
+          messages: [...pastMessages, message],
         },
-        body: JSON.stringify({
-          values: {
-            messages: [...pastMessages, message],
-          },
-        }),
       });
     } catch (error) {
       console.error('Error updating message:', error);
+      throw error;
+    }
+  }
+
+  async clearHistory(): Promise<void> {
+    try {
+      await this.client.threads.updateState(this.threadId, {
+        values: {
+          messages: [],
+        },
+      });
+    } catch (error) {
+      console.error('Error clearing history:', error);
       throw error;
     }
   }
@@ -138,14 +147,10 @@ export class AgentService {
         messageContent = content;
       }
 
-      const response = await fetch(`${this.baseUrl}/runs/wait`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          thread_id: this.threadId,
-          assistant_id: 'ui_agent',
+      const runResult = await this.client.runs.wait(
+        this.threadId,
+        this.assistantId,
+        {
           input: {
             messages: [
               {
@@ -154,17 +159,77 @@ export class AgentService {
               },
             ],
           },
-        }),
-      });
+        }
+      );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      return result.messages.slice(pastMessages.length);
+      const runMessages = (runResult as any).messages as AgentMessage[];
+      return runMessages.slice(pastMessages.length);
     } catch (error) {
       console.error('Error getting response:', error);
+      throw error;
+    }
+  }
+
+  async *getStreamingResponse(
+    userInput: string | { text: string; files: File[] }
+  ): AsyncGenerator<AgentMessage, void, unknown> {
+    try {
+      let messageContent: string | MessageContent[];
+
+      if (typeof userInput === 'string') {
+        messageContent = userInput;
+      } else {
+        // Convert to multi-content format
+        const content: MessageContent[] = [];
+
+        if (userInput.text) {
+          content.push({
+            type: 'text',
+            text: userInput.text,
+          });
+        }
+
+        // Convert files to base64 and add to content
+        for (const file of userInput.files) {
+          if (file.type.startsWith('image/')) {
+            const base64 = await this.fileToBase64(file);
+            content.push({
+              type: 'image_url',
+              image_url: {
+                url: `data:${file.type};base64,${base64}`,
+              },
+            });
+          }
+        }
+
+        messageContent = content;
+      }
+
+      const streamResponse = this.client.runs.stream(
+        this.threadId,
+        this.assistantId,
+        {
+          input: {
+            messages: [
+              {
+                role: 'human',
+                content: messageContent,
+              },
+            ],
+          },
+        }
+      );
+
+      for await (const chunk of streamResponse) {
+        if (chunk.event === 'messages/partial' && chunk.data) {
+          const messages = chunk.data as AgentMessage[];
+          for (const message of messages) {
+            yield message;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error getting streaming response:', error);
       throw error;
     }
   }
