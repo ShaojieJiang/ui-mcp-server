@@ -26,6 +26,13 @@ docs = [
 
 [project]
 dependencies = [
+  "langchain>=0.3.27",
+  "langchain-community>=0.3.27",
+  "langchain-google-community>=2.0.7",
+  "langchain-google-genai>=2.1.8",
+  "langchain-google-vertexai>=2.0.27",
+  "langchain-mcp-adapters>=0.1.9",
+  "langchain-openai>=0.3.28",
   "langgraph>=0.6.2",
   "langgraph-cli[inmem]>=0.3.6",
   "mcp[cli]>=1.12.2",
