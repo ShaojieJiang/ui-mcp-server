@@ -6,11 +6,13 @@
 
 This project initiates at the [Power of Europe Hackathon 2025](https://rewirenow.com/en/resources/blog/power-of-europe-hackathon-building-with-european-ai/).
 
-## Demo
+## LLM-OS demo
+
+[![Demo Video](https://img.youtube.com/vi/oyJgfT1L1Qw/0.jpg)](https://www.youtube.com/watch?v=oyJgfT1L1Qw)
+
+## All supported components demo
 
 [![Demo Video](https://img.youtube.com/vi/o_kE_zjVRKc/0.jpg)](https://www.youtube.com/watch?v=o_kE_zjVRKc)
-
-https://youtu.be/o_kE_zjVRKc
 
 ## Overview
 
