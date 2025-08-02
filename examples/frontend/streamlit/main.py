@@ -1,12 +1,16 @@
 """Chat with the agent."""
 
 import asyncio
+import base64
 import json
 import uuid
 from typing import Any
 import streamlit as st
 from agent import Agent
 from dotenv import load_dotenv
+from langchain_core.messages import HumanMessage
+from streamlit.elements.widgets.chat import ChatInputValue
+from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 
 load_dotenv()
@@ -204,11 +208,36 @@ class ChatPage:
                 if message["type"] == "tool":
                     await self.display_ui_component(message)
                 else:
-                    st.write(message["content"])
+                    msg_content = message["content"]
+                    if isinstance(msg_content, str):
+                        st.write(msg_content)
+                    else:
+                        for content in msg_content:
+                            content_type = content["type"]
+                            if content_type == "text":
+                                st.write(content["text"])
+                            elif content_type == "image_url":
+                                st.image(content["image_url"]["url"])
 
-    async def get_agent_response(self, user_text: str) -> None:
+    def image_to_base64(self, image: UploadedFile) -> str:
+        """Convert the image to base64."""
+        return base64.b64encode(image.read()).decode("utf-8")
+
+    async def get_agent_response(self, user_input: ChatInputValue) -> None:
         """Get the agent response."""
-        self.messages.extend(await self.agent.get_response(user_text))
+        user_message = HumanMessage(
+            content=[{"type": "text", "text": user_input.text}]
+            + [
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:{file.type};base64,{self.image_to_base64(file)}"
+                    },
+                }
+                for file in user_input.files
+            ]
+        )
+        self.messages.extend(await self.agent.get_response(user_message))
         st.rerun()
 
     async def main(self) -> None:
@@ -216,9 +245,20 @@ class ChatPage:
         st.title("Chat with `ui-mcp-server`")
         await self.display_messages()
 
-        if user_text := st.chat_input("Input your message..."):
-            st.chat_message("user").write(user_text)
-            await self.get_agent_response(user_text)
+        if user_input := st.chat_input(
+            "Input your message...",
+            accept_file="multiple",
+            file_type=["jpg", "jpeg", "png"],
+        ):
+            if isinstance(user_input, ChatInputValue):
+                with st.chat_message("user"):
+                    st.write(user_input.text)
+                    for file in user_input.files:
+                        st.image(file)
+                await self.get_agent_response(user_input)
+            else:
+                st.write(f"Unknown user input type: {type(user_input)}")
+                st.chat_message("user").write(user_input)
 
 
 if "page" not in st.session_state:
