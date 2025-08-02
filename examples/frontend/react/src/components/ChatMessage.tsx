@@ -34,15 +34,55 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 
   const renderContent = () => {
     if (isTool && message.content) {
-      // Since we now filter out failed tool calls, we can assume valid JSON
-      const component: UIComponent = JSON.parse(message.content as string);
-      return (
-        <UIComponentRenderer
-          component={component}
-          onSubmit={(value) => onComponentSubmit?.(message.id, value)}
-          onRequestDirectoryAccess={onRequestDirectoryAccess}
-        />
-      );
+      try {
+        const component: UIComponent = JSON.parse(message.content as string);
+
+        // Check if component type is valid before rendering
+        const validInputTypes = [
+          'number_input',
+          'slider',
+          'radio',
+          'multiselect',
+          'color_picker',
+          'date_input',
+          'time_input',
+          'audio_input',
+          'camera_input',
+        ];
+
+        const validOutputTypes = [
+          'line',
+          'bar',
+          'scatter',
+          'image',
+          'audio',
+          'video',
+        ];
+
+        const isValidComponent =
+          validInputTypes.includes(component.type) ||
+          validOutputTypes.includes(component.type);
+
+        if (!isValidComponent) {
+          console.log(
+            'Filtering out tool message with invalid component type:',
+            component.type
+          );
+          return null;
+        }
+
+        return (
+          <UIComponentRenderer
+            component={component}
+            onSubmit={(value) => onComponentSubmit?.(message.id, value)}
+            onRequestDirectoryAccess={onRequestDirectoryAccess}
+          />
+        );
+      } catch (error) {
+        // If parsing fails, don't render anything - this message should have been filtered out
+        console.error('Failed to parse tool message content:', error);
+        return null;
+      }
     }
 
     // Handle multi-content messages (text + images)
@@ -75,6 +115,13 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     );
   };
 
+  const content = renderContent();
+
+  // Don't render anything if content is null (failed tool calls)
+  if (content === null) {
+    return null;
+  }
+
   return (
     <div
       className={cn(
@@ -90,7 +137,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 
       <div className={cn('flex-1 min-w-0', isUser && 'flex justify-end')}>
         <Card className={cn('max-w-3xl', getMessageStyle())}>
-          <CardContent className="p-4">{renderContent()}</CardContent>
+          <CardContent className="p-4">{content}</CardContent>
         </Card>
       </div>
 

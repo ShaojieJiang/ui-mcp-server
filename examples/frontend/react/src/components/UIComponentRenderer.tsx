@@ -527,5 +527,6 @@ export const UIComponentRenderer: React.FC<UIComponentRendererProps> = ({
     return renderOutputComponent();
   }
 
-  return <div>Unknown component type: {component.type}</div>;
+  // Don't render anything for unknown component types (failed tool calls)
+  return null;
 };
